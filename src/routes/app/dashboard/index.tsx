@@ -1,4 +1,4 @@
-import MotivationalInsight from '@/features/dashboard/components/motivation-insight'
+import MotivationalInsight from '@/components/motivational-insight'
 import QuickStats from '@/features/dashboard/components/quick-stats'
 import StreaksAndProgress from '@/features/dashboard/components/streaks-and-progress'
 import TodaySchedule from '@/features/dashboard/components/today-schedule'
@@ -121,7 +121,7 @@ const motivationalMessages = [
   'Tip: Try grouping similar habits together for better adherence. Your brain loves patterns!',
 ]
 
-export const Route = createFileRoute('/app/_layout/dashboard')({
+export const Route = createFileRoute('/app/dashboard/')({
   component: RouteComponent,
 })
 

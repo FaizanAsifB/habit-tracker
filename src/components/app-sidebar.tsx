@@ -72,7 +72,7 @@ export default function AppSidebar() {
                   isActive={isActive('/habits')}
                   tooltip="Habits"
                 >
-                  <Link to="/habits">
+                  <Link to="/app/habits">
                     <Dumbbell className="h-4 w-4" />
                     <span>Habits</span>
                   </Link>
@@ -84,7 +84,7 @@ export default function AppSidebar() {
                   isActive={isActive('/tasks')}
                   tooltip="Tasks"
                 >
-                  <Link to="/tasks">
+                  <Link to="/app/tasks">
                     <CheckSquare className="h-4 w-4" />
                     <span>Tasks</span>
                   </Link>
@@ -96,7 +96,7 @@ export default function AppSidebar() {
                   isActive={isActive('/goals')}
                   tooltip="Goals"
                 >
-                  <Link to="/goals">
+                  <Link to="/app/goals">
                     <Target className="h-4 w-4" />
                     <span>Goals</span>
                   </Link>
@@ -108,7 +108,7 @@ export default function AppSidebar() {
                   isActive={isActive('/calendar')}
                   tooltip="Calendar"
                 >
-                  <Link to="/calendar">
+                  <Link to="/app/calendar">
                     <Calendar className="h-4 w-4" />
                     <span>Calendar</span>
                   </Link>
@@ -120,7 +120,7 @@ export default function AppSidebar() {
                   isActive={isActive('/progress')}
                   tooltip="Progress"
                 >
-                  <Link to="/progress">
+                  <Link to="/app/progress-and-analytics">
                     <BarChart className="h-4 w-4" />
                     <span>Progress</span>
                   </Link>
@@ -153,13 +153,13 @@ export default function AppSidebar() {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center">
+                <Link to="/app/settings" className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center">
+                <Link to="/app/settings" className="flex items-center">
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </Link>

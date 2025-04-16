@@ -8,29 +8,23 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as AppRouteImport } from './routes/app/route'
 import { Route as websiteIndexImport } from './routes/(website)/index'
-import { Route as AppLayoutImport } from './routes/app/_layout'
-import { Route as AppLayoutTasksImport } from './routes/app/_layout/tasks'
-import { Route as AppLayoutSettingsImport } from './routes/app/_layout/settings'
-import { Route as AppLayoutProgressAnalyticsImport } from './routes/app/_layout/progress-analytics'
-import { Route as AppLayoutNotFoundImport } from './routes/app/_layout/not-found'
-import { Route as AppLayoutHabitsImport } from './routes/app/_layout/habits'
-import { Route as AppLayoutGoalsImport } from './routes/app/_layout/goals'
-import { Route as AppLayoutDashboardImport } from './routes/app/_layout/dashboard'
-import { Route as AppLayoutCalendarImport } from './routes/app/_layout/calendar'
-
-// Create Virtual Routes
-
-const AppImport = createFileRoute('/app')()
+import { Route as AppNotFoundImport } from './routes/app/not-found'
+import { Route as AppTasksIndexImport } from './routes/app/tasks/index'
+import { Route as AppSettingsIndexImport } from './routes/app/settings/index'
+import { Route as AppProgressAndAnalyticsIndexImport } from './routes/app/progress-and-analytics/index'
+import { Route as AppHabitsIndexImport } from './routes/app/habits/index'
+import { Route as AppGoalsIndexImport } from './routes/app/goals/index'
+import { Route as AppDashboardIndexImport } from './routes/app/dashboard/index'
+import { Route as AppCalendarIndexImport } from './routes/app/calendar/index'
 
 // Create/Update Routes
 
-const AppRoute = AppImport.update({
+const AppRouteRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
   getParentRoute: () => rootRoute,
@@ -42,59 +36,53 @@ const websiteIndexRoute = websiteIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AppLayoutRoute = AppLayoutImport.update({
-  id: '/_layout',
-  getParentRoute: () => AppRoute,
-} as any)
-
-const AppLayoutTasksRoute = AppLayoutTasksImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => AppLayoutRoute,
-} as any)
-
-const AppLayoutSettingsRoute = AppLayoutSettingsImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppLayoutRoute,
-} as any)
-
-const AppLayoutProgressAnalyticsRoute = AppLayoutProgressAnalyticsImport.update(
-  {
-    id: '/progress-analytics',
-    path: '/progress-analytics',
-    getParentRoute: () => AppLayoutRoute,
-  } as any,
-)
-
-const AppLayoutNotFoundRoute = AppLayoutNotFoundImport.update({
+const AppNotFoundRoute = AppNotFoundImport.update({
   id: '/not-found',
   path: '/not-found',
-  getParentRoute: () => AppLayoutRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppLayoutHabitsRoute = AppLayoutHabitsImport.update({
-  id: '/habits',
-  path: '/habits',
-  getParentRoute: () => AppLayoutRoute,
+const AppTasksIndexRoute = AppTasksIndexImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppLayoutGoalsRoute = AppLayoutGoalsImport.update({
-  id: '/goals',
-  path: '/goals',
-  getParentRoute: () => AppLayoutRoute,
+const AppSettingsIndexRoute = AppSettingsIndexImport.update({
+  id: '/settings/',
+  path: '/settings/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppLayoutDashboardRoute = AppLayoutDashboardImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppLayoutRoute,
+const AppProgressAndAnalyticsIndexRoute =
+  AppProgressAndAnalyticsIndexImport.update({
+    id: '/progress-and-analytics/',
+    path: '/progress-and-analytics/',
+    getParentRoute: () => AppRouteRoute,
+  } as any)
+
+const AppHabitsIndexRoute = AppHabitsIndexImport.update({
+  id: '/habits/',
+  path: '/habits/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
-const AppLayoutCalendarRoute = AppLayoutCalendarImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => AppLayoutRoute,
+const AppGoalsIndexRoute = AppGoalsIndexImport.update({
+  id: '/goals/',
+  path: '/goals/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppDashboardIndexRoute = AppDashboardIndexImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppCalendarIndexRoute = AppCalendarIndexImport.update({
+  id: '/calendar/',
+  path: '/calendar/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -105,15 +93,15 @@ declare module '@tanstack/react-router' {
       id: '/app'
       path: '/app'
       fullPath: '/app'
-      preLoaderRoute: typeof AppImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRoute
     }
-    '/app/_layout': {
-      id: '/app/_layout'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppLayoutImport
-      parentRoute: typeof AppRoute
+    '/app/not-found': {
+      id: '/app/not-found'
+      path: '/not-found'
+      fullPath: '/app/not-found'
+      preLoaderRoute: typeof AppNotFoundImport
+      parentRoute: typeof AppRouteImport
     }
     '/(website)/': {
       id: '/(website)/'
@@ -122,192 +110,173 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof websiteIndexImport
       parentRoute: typeof rootRoute
     }
-    '/app/_layout/calendar': {
-      id: '/app/_layout/calendar'
+    '/app/calendar/': {
+      id: '/app/calendar/'
       path: '/calendar'
       fullPath: '/app/calendar'
-      preLoaderRoute: typeof AppLayoutCalendarImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppCalendarIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/dashboard': {
-      id: '/app/_layout/dashboard'
+    '/app/dashboard/': {
+      id: '/app/dashboard/'
       path: '/dashboard'
       fullPath: '/app/dashboard'
-      preLoaderRoute: typeof AppLayoutDashboardImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppDashboardIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/goals': {
-      id: '/app/_layout/goals'
+    '/app/goals/': {
+      id: '/app/goals/'
       path: '/goals'
       fullPath: '/app/goals'
-      preLoaderRoute: typeof AppLayoutGoalsImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppGoalsIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/habits': {
-      id: '/app/_layout/habits'
+    '/app/habits/': {
+      id: '/app/habits/'
       path: '/habits'
       fullPath: '/app/habits'
-      preLoaderRoute: typeof AppLayoutHabitsImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppHabitsIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/not-found': {
-      id: '/app/_layout/not-found'
-      path: '/not-found'
-      fullPath: '/app/not-found'
-      preLoaderRoute: typeof AppLayoutNotFoundImport
-      parentRoute: typeof AppLayoutImport
+    '/app/progress-and-analytics/': {
+      id: '/app/progress-and-analytics/'
+      path: '/progress-and-analytics'
+      fullPath: '/app/progress-and-analytics'
+      preLoaderRoute: typeof AppProgressAndAnalyticsIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/progress-analytics': {
-      id: '/app/_layout/progress-analytics'
-      path: '/progress-analytics'
-      fullPath: '/app/progress-analytics'
-      preLoaderRoute: typeof AppLayoutProgressAnalyticsImport
-      parentRoute: typeof AppLayoutImport
-    }
-    '/app/_layout/settings': {
-      id: '/app/_layout/settings'
+    '/app/settings/': {
+      id: '/app/settings/'
       path: '/settings'
       fullPath: '/app/settings'
-      preLoaderRoute: typeof AppLayoutSettingsImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppSettingsIndexImport
+      parentRoute: typeof AppRouteImport
     }
-    '/app/_layout/tasks': {
-      id: '/app/_layout/tasks'
+    '/app/tasks/': {
+      id: '/app/tasks/'
       path: '/tasks'
       fullPath: '/app/tasks'
-      preLoaderRoute: typeof AppLayoutTasksImport
-      parentRoute: typeof AppLayoutImport
+      preLoaderRoute: typeof AppTasksIndexImport
+      parentRoute: typeof AppRouteImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface AppLayoutRouteChildren {
-  AppLayoutCalendarRoute: typeof AppLayoutCalendarRoute
-  AppLayoutDashboardRoute: typeof AppLayoutDashboardRoute
-  AppLayoutGoalsRoute: typeof AppLayoutGoalsRoute
-  AppLayoutHabitsRoute: typeof AppLayoutHabitsRoute
-  AppLayoutNotFoundRoute: typeof AppLayoutNotFoundRoute
-  AppLayoutProgressAnalyticsRoute: typeof AppLayoutProgressAnalyticsRoute
-  AppLayoutSettingsRoute: typeof AppLayoutSettingsRoute
-  AppLayoutTasksRoute: typeof AppLayoutTasksRoute
+interface AppRouteRouteChildren {
+  AppNotFoundRoute: typeof AppNotFoundRoute
+  AppCalendarIndexRoute: typeof AppCalendarIndexRoute
+  AppDashboardIndexRoute: typeof AppDashboardIndexRoute
+  AppGoalsIndexRoute: typeof AppGoalsIndexRoute
+  AppHabitsIndexRoute: typeof AppHabitsIndexRoute
+  AppProgressAndAnalyticsIndexRoute: typeof AppProgressAndAnalyticsIndexRoute
+  AppSettingsIndexRoute: typeof AppSettingsIndexRoute
+  AppTasksIndexRoute: typeof AppTasksIndexRoute
 }
 
-const AppLayoutRouteChildren: AppLayoutRouteChildren = {
-  AppLayoutCalendarRoute: AppLayoutCalendarRoute,
-  AppLayoutDashboardRoute: AppLayoutDashboardRoute,
-  AppLayoutGoalsRoute: AppLayoutGoalsRoute,
-  AppLayoutHabitsRoute: AppLayoutHabitsRoute,
-  AppLayoutNotFoundRoute: AppLayoutNotFoundRoute,
-  AppLayoutProgressAnalyticsRoute: AppLayoutProgressAnalyticsRoute,
-  AppLayoutSettingsRoute: AppLayoutSettingsRoute,
-  AppLayoutTasksRoute: AppLayoutTasksRoute,
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppNotFoundRoute: AppNotFoundRoute,
+  AppCalendarIndexRoute: AppCalendarIndexRoute,
+  AppDashboardIndexRoute: AppDashboardIndexRoute,
+  AppGoalsIndexRoute: AppGoalsIndexRoute,
+  AppHabitsIndexRoute: AppHabitsIndexRoute,
+  AppProgressAndAnalyticsIndexRoute: AppProgressAndAnalyticsIndexRoute,
+  AppSettingsIndexRoute: AppSettingsIndexRoute,
+  AppTasksIndexRoute: AppTasksIndexRoute,
 }
 
-const AppLayoutRouteWithChildren = AppLayoutRoute._addFileChildren(
-  AppLayoutRouteChildren,
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
 )
 
-interface AppRouteChildren {
-  AppLayoutRoute: typeof AppLayoutRouteWithChildren
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppLayoutRoute: AppLayoutRouteWithChildren,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
-
 export interface FileRoutesByFullPath {
-  '/app': typeof AppLayoutRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/not-found': typeof AppNotFoundRoute
   '/': typeof websiteIndexRoute
-  '/app/calendar': typeof AppLayoutCalendarRoute
-  '/app/dashboard': typeof AppLayoutDashboardRoute
-  '/app/goals': typeof AppLayoutGoalsRoute
-  '/app/habits': typeof AppLayoutHabitsRoute
-  '/app/not-found': typeof AppLayoutNotFoundRoute
-  '/app/progress-analytics': typeof AppLayoutProgressAnalyticsRoute
-  '/app/settings': typeof AppLayoutSettingsRoute
-  '/app/tasks': typeof AppLayoutTasksRoute
+  '/app/calendar': typeof AppCalendarIndexRoute
+  '/app/dashboard': typeof AppDashboardIndexRoute
+  '/app/goals': typeof AppGoalsIndexRoute
+  '/app/habits': typeof AppHabitsIndexRoute
+  '/app/progress-and-analytics': typeof AppProgressAndAnalyticsIndexRoute
+  '/app/settings': typeof AppSettingsIndexRoute
+  '/app/tasks': typeof AppTasksIndexRoute
 }
 
 export interface FileRoutesByTo {
-  '/app': typeof AppLayoutRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/not-found': typeof AppNotFoundRoute
   '/': typeof websiteIndexRoute
-  '/app/calendar': typeof AppLayoutCalendarRoute
-  '/app/dashboard': typeof AppLayoutDashboardRoute
-  '/app/goals': typeof AppLayoutGoalsRoute
-  '/app/habits': typeof AppLayoutHabitsRoute
-  '/app/not-found': typeof AppLayoutNotFoundRoute
-  '/app/progress-analytics': typeof AppLayoutProgressAnalyticsRoute
-  '/app/settings': typeof AppLayoutSettingsRoute
-  '/app/tasks': typeof AppLayoutTasksRoute
+  '/app/calendar': typeof AppCalendarIndexRoute
+  '/app/dashboard': typeof AppDashboardIndexRoute
+  '/app/goals': typeof AppGoalsIndexRoute
+  '/app/habits': typeof AppHabitsIndexRoute
+  '/app/progress-and-analytics': typeof AppProgressAndAnalyticsIndexRoute
+  '/app/settings': typeof AppSettingsIndexRoute
+  '/app/tasks': typeof AppTasksIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/app': typeof AppRouteWithChildren
-  '/app/_layout': typeof AppLayoutRouteWithChildren
+  '/app': typeof AppRouteRouteWithChildren
+  '/app/not-found': typeof AppNotFoundRoute
   '/(website)/': typeof websiteIndexRoute
-  '/app/_layout/calendar': typeof AppLayoutCalendarRoute
-  '/app/_layout/dashboard': typeof AppLayoutDashboardRoute
-  '/app/_layout/goals': typeof AppLayoutGoalsRoute
-  '/app/_layout/habits': typeof AppLayoutHabitsRoute
-  '/app/_layout/not-found': typeof AppLayoutNotFoundRoute
-  '/app/_layout/progress-analytics': typeof AppLayoutProgressAnalyticsRoute
-  '/app/_layout/settings': typeof AppLayoutSettingsRoute
-  '/app/_layout/tasks': typeof AppLayoutTasksRoute
+  '/app/calendar/': typeof AppCalendarIndexRoute
+  '/app/dashboard/': typeof AppDashboardIndexRoute
+  '/app/goals/': typeof AppGoalsIndexRoute
+  '/app/habits/': typeof AppHabitsIndexRoute
+  '/app/progress-and-analytics/': typeof AppProgressAndAnalyticsIndexRoute
+  '/app/settings/': typeof AppSettingsIndexRoute
+  '/app/tasks/': typeof AppTasksIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/app'
+    | '/app/not-found'
     | '/'
     | '/app/calendar'
     | '/app/dashboard'
     | '/app/goals'
     | '/app/habits'
-    | '/app/not-found'
-    | '/app/progress-analytics'
+    | '/app/progress-and-analytics'
     | '/app/settings'
     | '/app/tasks'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/app'
+    | '/app/not-found'
     | '/'
     | '/app/calendar'
     | '/app/dashboard'
     | '/app/goals'
     | '/app/habits'
-    | '/app/not-found'
-    | '/app/progress-analytics'
+    | '/app/progress-and-analytics'
     | '/app/settings'
     | '/app/tasks'
   id:
     | '__root__'
     | '/app'
-    | '/app/_layout'
+    | '/app/not-found'
     | '/(website)/'
-    | '/app/_layout/calendar'
-    | '/app/_layout/dashboard'
-    | '/app/_layout/goals'
-    | '/app/_layout/habits'
-    | '/app/_layout/not-found'
-    | '/app/_layout/progress-analytics'
-    | '/app/_layout/settings'
-    | '/app/_layout/tasks'
+    | '/app/calendar/'
+    | '/app/dashboard/'
+    | '/app/goals/'
+    | '/app/habits/'
+    | '/app/progress-and-analytics/'
+    | '/app/settings/'
+    | '/app/tasks/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  AppRoute: typeof AppRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
   websiteIndexRoute: typeof websiteIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  AppRoute: AppRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
   websiteIndexRoute: websiteIndexRoute,
 }
 
@@ -326,59 +295,52 @@ export const routeTree = rootRoute
       ]
     },
     "/app": {
-      "filePath": "app",
+      "filePath": "app/route.tsx",
       "children": [
-        "/app/_layout"
+        "/app/not-found",
+        "/app/calendar/",
+        "/app/dashboard/",
+        "/app/goals/",
+        "/app/habits/",
+        "/app/progress-and-analytics/",
+        "/app/settings/",
+        "/app/tasks/"
       ]
     },
-    "/app/_layout": {
-      "filePath": "app/_layout.tsx",
-      "parent": "/app",
-      "children": [
-        "/app/_layout/calendar",
-        "/app/_layout/dashboard",
-        "/app/_layout/goals",
-        "/app/_layout/habits",
-        "/app/_layout/not-found",
-        "/app/_layout/progress-analytics",
-        "/app/_layout/settings",
-        "/app/_layout/tasks"
-      ]
+    "/app/not-found": {
+      "filePath": "app/not-found.tsx",
+      "parent": "/app"
     },
     "/(website)/": {
       "filePath": "(website)/index.tsx"
     },
-    "/app/_layout/calendar": {
-      "filePath": "app/_layout/calendar.tsx",
-      "parent": "/app/_layout"
+    "/app/calendar/": {
+      "filePath": "app/calendar/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/dashboard": {
-      "filePath": "app/_layout/dashboard.tsx",
-      "parent": "/app/_layout"
+    "/app/dashboard/": {
+      "filePath": "app/dashboard/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/goals": {
-      "filePath": "app/_layout/goals.tsx",
-      "parent": "/app/_layout"
+    "/app/goals/": {
+      "filePath": "app/goals/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/habits": {
-      "filePath": "app/_layout/habits.tsx",
-      "parent": "/app/_layout"
+    "/app/habits/": {
+      "filePath": "app/habits/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/not-found": {
-      "filePath": "app/_layout/not-found.tsx",
-      "parent": "/app/_layout"
+    "/app/progress-and-analytics/": {
+      "filePath": "app/progress-and-analytics/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/progress-analytics": {
-      "filePath": "app/_layout/progress-analytics.tsx",
-      "parent": "/app/_layout"
+    "/app/settings/": {
+      "filePath": "app/settings/index.tsx",
+      "parent": "/app"
     },
-    "/app/_layout/settings": {
-      "filePath": "app/_layout/settings.tsx",
-      "parent": "/app/_layout"
-    },
-    "/app/_layout/tasks": {
-      "filePath": "app/_layout/tasks.tsx",
-      "parent": "/app/_layout"
+    "/app/tasks/": {
+      "filePath": "app/tasks/index.tsx",
+      "parent": "/app"
     }
   }
 }

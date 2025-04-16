@@ -74,7 +74,7 @@ interface EnergyLevelData {
   level: number
 }
 
-export const Route = createFileRoute('/app/_layout/calendar')({
+export const Route = createFileRoute('/app/calendar/')({
   component: RouteComponent,
 })
 

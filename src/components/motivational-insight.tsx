@@ -1,5 +1,4 @@
 import { Lightbulb } from 'lucide-react'
-
 interface MotivationalInsightProps {
   message: string
   title?: string
