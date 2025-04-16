@@ -28,7 +28,7 @@ import {
   Filter,
   PlusCircle,
 } from 'lucide-react'
-import React, { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
@@ -382,7 +382,6 @@ function RouteComponent() {
     }
   }
 
-  // Map view strings between our app and react-big-calendar
   const mapViewToRBC = (view: CalendarView) => {
     switch (view) {
       case 'day':
@@ -395,35 +394,26 @@ function RouteComponent() {
         return Views.WEEK
     }
   }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main className="container mx-auto pt-6 px-4">
-        <div className="header-controls flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-          {/* Date selector and navigation */}
-          <div className="flex items-center space-x-2 mb-4 sm:mb-0">
+      <div className="container">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div className="flex items-center gap-2 ">
             <Button variant="outline" size="icon" onClick={navigatePrevious}>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="size-4" />
             </Button>
-
-            <h1 className="text-xl font-bold mx-2">{getHeaderTitle()}</h1>
-
+            <h2 className="text-xl font-bold ">{getHeaderTitle()}</h2>
             <Button variant="outline" size="icon" onClick={navigateNext}>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="size-4" />
             </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToToday}
-              className="ml-2"
-            >
+            <Button variant="outline" size="sm" onClick={goToToday}>
               Today
             </Button>
-
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="icon">
-                  <CalendarIcon className="h-4 w-4" />
+                  <CalendarIcon className="size-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 z-50">
@@ -438,7 +428,6 @@ function RouteComponent() {
             </Popover>
           </div>
 
-          {/* Right side controls - REMOVED THE VIEW TOGGLE, KEEPING OTHER CONTROLS */}
           <div className="flex flex-wrap items-center gap-2">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -467,17 +456,6 @@ function RouteComponent() {
             </Button>
           </div>
         </div>
-
-        {/* Energy Level Overlay (only for day and week views)
-        {(view === 'day' || view === 'week') && (
-          <EnergyLevelOverlay
-            data={energyLevels}
-            onUpdateEnergyLevel={handleUpdateEnergyLevel}
-            view={view}
-            className="mb-4"
-          />
-        )} */}
-
         {/* Main calendar content */}
         <div className="calendar-content bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <BigCalendar
@@ -485,9 +463,9 @@ function RouteComponent() {
             events={
               showCompleted ? events : events.filter(event => !event.completed)
             }
-            startAccessor="start"
-            endAccessor="end"
-            defaultView={mapViewToRBC(view)}
+            // startAccessor="start"
+            // endAccessor="end"
+            defaultView={'week'}
             view={mapViewToRBC(view)}
             onView={newView => {
               if (newView === Views.DAY) setView('day')
@@ -511,12 +489,10 @@ function RouteComponent() {
             }}
             popup
             views={[Views.DAY, Views.WEEK, Views.MONTH]}
-            components={{}}
-            {...calendarStyles}
-            className="custom-big-calendar"
+            style={{ height: '100vh' }}
           />
         </div>
-      </main>
+      </div>
 
       {/* Time Block Form Dialog */}
       <Dialog open={isTimeBlockFormOpen} onOpenChange={setIsTimeBlockFormOpen}>
