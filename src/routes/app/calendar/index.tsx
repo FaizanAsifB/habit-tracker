@@ -13,11 +13,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import type { TimeBlockFormData } from '@/features/calendar/components/forms/time-block-form'
+import TimeBlockForm from '@/features/calendar/components/forms/time-block-form'
 import { cn } from '@/lib/utils'
 import { addDays, format, getDay, parse, startOfWeek } from 'date-fns'
 import { enUS } from 'date-fns/locale'
@@ -33,10 +36,8 @@ import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
   Views,
+  type View,
 } from 'react-big-calendar'
-
-import type { TimeBlockFormData } from '@/features/calendar/components/forms/time-block-form'
-import TimeBlockForm from '@/features/calendar/components/forms/time-block-form'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 // Set up date-fns localizer for React Big Calendar
@@ -53,7 +54,7 @@ const localizer = dateFnsLocalizer({
 })
 
 // Type for calendar view options
-type CalendarView = 'day' | 'week' | 'month'
+// type CalendarView = 'day' | 'week' | 'month'
 
 // Event data structure for React Big Calendar
 interface CalendarEvent {
@@ -80,8 +81,8 @@ export const Route = createFileRoute('/app/calendar/')({
 
 function RouteComponent() {
   // State variables
-  const [view, setView] = useState<CalendarView>('week')
-  const [currentDate, setCurrentDate] = useState<Date>(new Date())
+  const [view, setView] = useState<View>('week')
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [showCompleted, setShowCompleted] = useState<boolean>(true)
   const [energyLevels, setEnergyLevels] = useState<EnergyLevelData[]>(
     generateSampleEnergyData()
@@ -124,7 +125,6 @@ function RouteComponent() {
     return data
   }
 
-  // Generate sample events
   function generateSampleEvents(): CalendarEvent[] {
     const today = new Date()
 
@@ -224,31 +224,31 @@ function RouteComponent() {
   }
 
   // Navigation functions
-  const goToToday = () => setCurrentDate(new Date())
+  const goToToday = () => setSelectedDate(new Date())
 
   const navigatePrevious = () => {
     if (view === 'day') {
-      setCurrentDate(prevDate => addDays(prevDate, -1))
+      setSelectedDate(prevDate => addDays(prevDate, -1))
     } else if (view === 'week') {
-      setCurrentDate(prevDate => addDays(prevDate, -7))
+      setSelectedDate(prevDate => addDays(prevDate, -7))
     } else {
       // Month view
-      const prevMonth = new Date(currentDate)
+      const prevMonth = new Date(selectedDate)
       prevMonth.setMonth(prevMonth.getMonth() - 1)
-      setCurrentDate(prevMonth)
+      setSelectedDate(prevMonth)
     }
   }
 
   const navigateNext = () => {
     if (view === 'day') {
-      setCurrentDate(prevDate => addDays(prevDate, 1))
+      setSelectedDate(prevDate => addDays(prevDate, 1))
     } else if (view === 'week') {
-      setCurrentDate(prevDate => addDays(prevDate, 7))
+      setSelectedDate(prevDate => addDays(prevDate, 7))
     } else {
       // Month view
-      const nextMonth = new Date(currentDate)
+      const nextMonth = new Date(selectedDate)
       nextMonth.setMonth(nextMonth.getMonth() + 1)
-      setCurrentDate(nextMonth)
+      setSelectedDate(nextMonth)
     }
   }
 
@@ -269,13 +269,13 @@ function RouteComponent() {
   // Get header title based on current view and date
   const getHeaderTitle = () => {
     if (view === 'day') {
-      return format(currentDate, 'MMMM d, yyyy')
+      return format(selectedDate, 'MMMM d, yyyy')
     } else if (view === 'week') {
-      const start = startOfWeek(currentDate, { weekStartsOn: 1 })
+      const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
       const end = addDays(start, 6)
       return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`
     } else {
-      return format(currentDate, 'MMMM yyyy')
+      return format(selectedDate, 'MMMM yyyy')
     }
   }
 
@@ -378,7 +378,8 @@ function RouteComponent() {
 
     return {
       style,
-      className: `event-item ${event.completed ? 'completed' : ''}`,
+      // className: `event-item ${event.completed ? 'completed' : ''}`,
+      className: event.completed ? 'completed' : '',
     }
   }
 
@@ -419,8 +420,8 @@ function RouteComponent() {
               <PopoverContent className="w-auto p-0 z-50">
                 <Calendar
                   mode="single"
-                  selected={currentDate}
-                  onSelect={date => date && setCurrentDate(date)}
+                  selected={selectedDate}
+                  onSelect={date => date && setSelectedDate(date)}
                   initialFocus
                   className={cn('p-3 pointer-events-auto')}
                 />
@@ -429,6 +430,19 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Tabs
+              defaultValue="week"
+              value={view}
+              onValueChange={value => setView(value as View)}
+              className="w-[400px]"
+            >
+              <TabsList>
+                <TabsTrigger value="day">Day</TabsTrigger>
+                <TabsTrigger value="week">Week</TabsTrigger>
+                <TabsTrigger value="month">Month</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -457,39 +471,43 @@ function RouteComponent() {
           </div>
         </div>
         {/* Main calendar content */}
-        <div className="calendar-content bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
+        <div className=" bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-100 dark:border-gray-700">
           <BigCalendar
             localizer={localizer}
             events={
               showCompleted ? events : events.filter(event => !event.completed)
             }
-            // startAccessor="start"
-            // endAccessor="end"
+            startAccessor="start"
+            endAccessor="end"
             defaultView={'week'}
-            view={mapViewToRBC(view)}
-            onView={newView => {
-              if (newView === Views.DAY) setView('day')
-              else if (newView === Views.WEEK) setView('week')
-              else if (newView === Views.MONTH) setView('month')
-            }}
-            onNavigate={date => setCurrentDate(date)}
-            date={currentDate}
+            view={view}
+            // onView={newView => {
+            //   setView(newView)
+            // }}
+            // onNavigate={date => setCurrentDate(date)}
+            date={selectedDate}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
             selectable
             eventPropGetter={eventStyleGetter}
-            dayPropGetter={date => {
-              const today = new Date()
-              return {
-                className:
-                  format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-                    ? 'rbc-today'
-                    : '',
-              }
+            toolbar={false}
+            formats={{
+              eventTimeRangeFormat: () => {
+                return ''
+              },
             }}
+            // dayPropGetter={date => {
+            //   const today = new Date()
+            //   return {
+            //     className:
+            //       format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+            //         ? 'rbc-today'
+            //         : '',
+            //   }
+            // }}
             popup
             views={[Views.DAY, Views.WEEK, Views.MONTH]}
-            style={{ height: '100vh' }}
+            style={{ height: 700 }}
           />
         </div>
       </div>
