@@ -31,7 +31,7 @@ import {
   Filter,
   PlusCircle,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
@@ -53,10 +53,8 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
-// Type for calendar view options
 // type CalendarView = 'day' | 'week' | 'month'
 
-// Event data structure for React Big Calendar
 interface CalendarEvent {
   id: string
   title: string
@@ -69,7 +67,6 @@ interface CalendarEvent {
   description?: string
 }
 
-// Energy level data type
 interface EnergyLevelData {
   date: string
   level: number
@@ -80,20 +77,28 @@ export const Route = createFileRoute('/app/calendar/')({
 })
 
 function RouteComponent() {
-  // State variables
   const [view, setView] = useState<View>('week')
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [dateTitle, setDateTitle] = useState('')
   const [showCompleted, setShowCompleted] = useState<boolean>(true)
-  const [energyLevels, setEnergyLevels] = useState<EnergyLevelData[]>(
-    generateSampleEnergyData()
-  )
   const [events, setEvents] = useState<CalendarEvent[]>(generateSampleEvents())
 
-  // Modal and form state
   const [isTimeBlockFormOpen, setIsTimeBlockFormOpen] = useState<boolean>(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
-  // Custom styles for the calendar
+  useEffect(() => {
+    if (view === 'day') setDateTitle(format(selectedDate, 'MMMM d, yyyy'))
+    if (view === 'week') {
+      const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
+      const end = addDays(start, 6)
+      const title = `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`
+      setDateTitle(title)
+    }
+    if (view === 'month') {
+      setDateTitle(format(selectedDate, 'MMMM yyyy'))
+    }
+  }, [selectedDate, view])
+
   const calendarStyles = useMemo(
     () => ({
       height: 'calc(100vh - 220px)',
@@ -102,28 +107,6 @@ function RouteComponent() {
     }),
     []
   )
-
-  // Generate sample data for energy levels
-  function generateSampleEnergyData(): EnergyLevelData[] {
-    const data: EnergyLevelData[] = []
-    const today = new Date()
-
-    // Generate some sample energy data for the week
-    for (let i = -3; i <= 3; i++) {
-      const date = addDays(today, i)
-      const dateString = format(date, 'yyyy-MM-dd')
-
-      // Random energy level between 1 and 5
-      const level = Math.floor(Math.random() * 5) + 1
-
-      data.push({
-        date: dateString,
-        level,
-      })
-    }
-
-    return data
-  }
 
   function generateSampleEvents(): CalendarEvent[] {
     const today = new Date()
@@ -223,36 +206,28 @@ function RouteComponent() {
     ]
   }
 
-  // Navigation functions
   const goToToday = () => setSelectedDate(new Date())
 
-  const navigatePrevious = () => {
-    if (view === 'day') {
-      setSelectedDate(prevDate => addDays(prevDate, -1))
-    } else if (view === 'week') {
-      setSelectedDate(prevDate => addDays(prevDate, -7))
-    } else {
-      // Month view
-      const prevMonth = new Date(selectedDate)
-      prevMonth.setMonth(prevMonth.getMonth() - 1)
-      setSelectedDate(prevMonth)
+  function navigatePrevious() {
+    if (view === 'day') setSelectedDate(prevDate => addDays(prevDate, -1))
+    if (view === 'week') setSelectedDate(prevDate => addDays(prevDate, -7))
+    if (view === 'month') {
+      const selectedMonth = new Date(selectedDate)
+      selectedMonth.setMonth(selectedMonth.getMonth() - 1)
+      setSelectedDate(selectedMonth)
     }
   }
 
-  const navigateNext = () => {
-    if (view === 'day') {
-      setSelectedDate(prevDate => addDays(prevDate, 1))
-    } else if (view === 'week') {
-      setSelectedDate(prevDate => addDays(prevDate, 7))
-    } else {
-      // Month view
-      const nextMonth = new Date(selectedDate)
-      nextMonth.setMonth(nextMonth.getMonth() + 1)
-      setSelectedDate(nextMonth)
+  function navigateNext() {
+    if (view === 'day') setSelectedDate(prevDate => addDays(prevDate, 1))
+    if (view === 'week') setSelectedDate(prevDate => addDays(prevDate, 7))
+    if (view === 'month') {
+      const selectedMonth = new Date(selectedDate)
+      selectedMonth.setMonth(selectedMonth.getMonth() + 1)
+      setSelectedDate(selectedMonth)
     }
   }
 
-  // Handle energy level updates
   const handleUpdateEnergyLevel = (date: string, level: number) => {
     setEnergyLevels(prev => {
       const existing = prev.findIndex(item => item.date === date)
@@ -264,19 +239,6 @@ function RouteComponent() {
         return [...prev, { date, level }]
       }
     })
-  }
-
-  // Get header title based on current view and date
-  const getHeaderTitle = () => {
-    if (view === 'day') {
-      return format(selectedDate, 'MMMM d, yyyy')
-    } else if (view === 'week') {
-      const start = startOfWeek(selectedDate, { weekStartsOn: 1 })
-      const end = addDays(start, 6)
-      return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`
-    } else {
-      return format(selectedDate, 'MMMM yyyy')
-    }
   }
 
   // Event handlers for the calendar
@@ -383,19 +345,6 @@ function RouteComponent() {
     }
   }
 
-  const mapViewToRBC = (view: CalendarView) => {
-    switch (view) {
-      case 'day':
-        return Views.DAY
-      case 'week':
-        return Views.WEEK
-      case 'month':
-        return Views.MONTH
-      default:
-        return Views.WEEK
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container">
@@ -404,7 +353,7 @@ function RouteComponent() {
             <Button variant="outline" size="icon" onClick={navigatePrevious}>
               <ChevronLeft className="size-4" />
             </Button>
-            <h2 className="text-xl font-bold ">{getHeaderTitle()}</h2>
+            <h2 className="text-xl font-bold ">{dateTitle}</h2>
             <Button variant="outline" size="icon" onClick={navigateNext}>
               <ChevronRight className="size-4" />
             </Button>
@@ -496,18 +445,18 @@ function RouteComponent() {
                 return ''
               },
             }}
-            // dayPropGetter={date => {
-            //   const today = new Date()
-            //   return {
-            //     className:
-            //       format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-            //         ? 'rbc-today'
-            //         : '',
-            //   }
-            // }}
+            dayPropGetter={date => {
+              const today = new Date()
+              return {
+                className:
+                  format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+                    ? 'rbc-today'
+                    : '',
+              }
+            }}
             popup
             views={[Views.DAY, Views.WEEK, Views.MONTH]}
-            style={{ height: 700 }}
+            style={calendarStyles}
           />
         </div>
       </div>
