@@ -160,58 +160,12 @@ code {
   background-color: var(--brand-white);
 }
 
-/* CSS overrides for react-big-calendar week view alignment */
-/* .rbc-day-bg,
-.rbc-day-content,
-.rbc-day {
-  flex-basis: 0;
-  flex-grow: 1;
-} */
-/* 
-.rbc-row-bg {
-  display: flex;
-} */
-
-/* .custom-big-calendar {
-  height: 600px; 
-  width: 100%;
-  border: 1px solid #ccc; 
-}
-
-.custom-big-calendar .rbc-month-view {
-  height: 100%;
-} */
-
-/* Fix alignment between header cells and all-day cells */
-/* .rbc-row.rbc-time-header-cell {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-} */
-
-/* .rbc-allday-cell {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-} */
-
-/* Remove any custom flexbox wrappers that aren't standard HTML */
-/* .rbc-allday-cell > flex,
-.rbc-time-header-cell > flex {
-  display: flex;
-  width: 100%;
-  flex: 1;
-} */
-
-/* Ensure child elements within each cell align properly */
-.rbc-allday-cell .rbc-row-bg,
+/* .rbc-allday-cell .rbc-row-bg,
 .rbc-time-header-cell .rbc-row-bg {
   width: 100%;
   display: flex;
-}
-
-/* .rbc-allday-cell .rbc-row-bg .rbc-day-bg,
-.rbc-time-header-cell .rbc-header {
-  flex: 1 0 0%;
-  min-width: 0;
 } */
+
+.rbc-row-bg {
+  right: 0;
+}
