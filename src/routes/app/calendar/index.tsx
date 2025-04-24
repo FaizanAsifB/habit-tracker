@@ -53,6 +53,13 @@ const localizer = dateFnsLocalizer({
   locales,
 })
 
+const CALENDAR_NAVIGATION_DIRECTION = {
+  NEXT: 1,
+  PREVIOUS: -1,
+} as const
+
+type CalendarNavigationDirection =
+  (typeof CALENDAR_NAVIGATION_DIRECTION)[keyof typeof CALENDAR_NAVIGATION_DIRECTION]
 // type CalendarView = 'day' | 'week' | 'month'
 
 interface CalendarEvent {
@@ -208,22 +215,14 @@ function RouteComponent() {
 
   const goToToday = () => setSelectedDate(new Date())
 
-  function navigatePrevious() {
-    if (view === 'day') setSelectedDate(prevDate => addDays(prevDate, -1))
-    if (view === 'week') setSelectedDate(prevDate => addDays(prevDate, -7))
+  function navigateCalendar(direction: CalendarNavigationDirection) {
+    if (view === 'day')
+      setSelectedDate(prevDate => addDays(prevDate, direction))
+    if (view === 'week')
+      setSelectedDate(prevDate => addDays(prevDate, direction * 7))
     if (view === 'month') {
       const selectedMonth = new Date(selectedDate)
-      selectedMonth.setMonth(selectedMonth.getMonth() - 1)
-      setSelectedDate(selectedMonth)
-    }
-  }
-
-  function navigateNext() {
-    if (view === 'day') setSelectedDate(prevDate => addDays(prevDate, 1))
-    if (view === 'week') setSelectedDate(prevDate => addDays(prevDate, 7))
-    if (view === 'month') {
-      const selectedMonth = new Date(selectedDate)
-      selectedMonth.setMonth(selectedMonth.getMonth() + 1)
+      selectedMonth.setMonth(selectedMonth.getMonth() + direction)
       setSelectedDate(selectedMonth)
     }
   }
@@ -350,11 +349,23 @@ function RouteComponent() {
       <div className="container">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
           <div className="flex items-center gap-2 ">
-            <Button variant="outline" size="icon" onClick={navigatePrevious}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() =>
+                navigateCalendar(CALENDAR_NAVIGATION_DIRECTION.PREVIOUS)
+              }
+            >
               <ChevronLeft className="size-4" />
             </Button>
             <h2 className="text-xl font-bold ">{dateTitle}</h2>
-            <Button variant="outline" size="icon" onClick={navigateNext}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() =>
+                navigateCalendar(CALENDAR_NAVIGATION_DIRECTION.NEXT)
+              }
+            >
               <ChevronRight className="size-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={goToToday}>
