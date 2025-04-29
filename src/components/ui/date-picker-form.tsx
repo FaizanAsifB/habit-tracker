@@ -22,7 +22,7 @@ type DatePickerProps<
   field: ControllerRenderProps<TFieldValues, TName>
 }
 
-export function DatePicker<
+export function DatePickerForm<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 >({ field }: DatePickerProps<TFieldValues, TName>) {
@@ -47,7 +47,7 @@ export function DatePicker<
             </Button>
           </FormControl>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             mode="single"
             selected={field.value}

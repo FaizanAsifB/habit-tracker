@@ -5,6 +5,7 @@ import { Calendar } from '@/components/ui/calendar'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -399,11 +400,17 @@ function RouteComponent() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedEvent?.id ? 'Edit Event' : 'Add New Event'}
+              {selectedEvent ? 'Edit Event' : 'Add New Event'}
             </DialogTitle>
           </DialogHeader>
-          <EventForm initialData={selectedEvent} />
+          <EventForm
+            initialData={selectedEvent}
+            setIsFormOpen={setIsEventFormOpen}
+          />
         </DialogContent>
+        <DialogDescription className="sr-only">
+          {selectedEvent ? 'Edit Event Form' : 'New Event Form'}
+        </DialogDescription>
       </Dialog>
     </div>
   )

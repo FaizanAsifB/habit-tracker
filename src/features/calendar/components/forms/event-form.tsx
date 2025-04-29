@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { DatePicker } from '@/components/ui/date-picker'
+import { DatePickerForm } from '@/components/ui/date-picker-form'
 import {
   Form,
   FormControl,
@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import type { CalendarEvent } from '@/routes/app/calendar'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { format } from 'date-fns'
+import type { Dispatch, SetStateAction } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -45,10 +46,13 @@ type EventForm = z.infer<typeof eventFormSchema>
 
 type EventFormProps = {
   initialData?: Partial<CalendarEvent>
+  setIsFormOpen: Dispatch<SetStateAction<boolean>>
 }
 
-export default function EventForm({ initialData }: EventFormProps) {
-  console.log(initialData)
+export default function EventForm({
+  initialData,
+  setIsFormOpen,
+}: EventFormProps) {
   const form = useForm<EventForm>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
@@ -68,27 +72,29 @@ export default function EventForm({ initialData }: EventFormProps) {
   })
 
   const handleSubmit = (event: EventForm) => {
-    const { title, description, start, end, category, completed } = event
+    // const { title, description, start, end, category, completed } = event
 
-    console.log(event)
-    const startDate = new Date(start)
-    console.log(startDate)
-    const [startHours, startMinutes] = start.split(':').map(Number)
-    startDate.setHours(startHours, startMinutes, 0, 0)
+    const updatedStartDate = new Date(event.startDate)
+    const [startHours, startMinutes] = event.allDay
+      ? [0, 0]
+      : event.startTime.split(':').map(Number)
+    updatedStartDate.setHours(startHours, startMinutes, 0, 0)
 
-    const endDate = new Date(end)
-    const [endHours, endMinutes] = end.split(':').map(Number)
-    endDate.setHours(endHours, endMinutes, 0, 0)
+    const updatedEndDate = new Date(event.endDate)
+    const [endHours, endMinutes] = event.allDay
+      ? [23, 59]
+      : event.endTime.split(':').map(Number)
+    updatedEndDate.setHours(endHours, endMinutes, 0, 0)
 
-    const newEvent: CalendarEvent = {
-      // id: initialData?.id || Date.now().toString(),
-      title,
-      description,
-      start: startDate,
-      end: endDate,
-      category,
-      completed: completed || false,
-    }
+    // const newEvent: CalendarEvent = {
+    // id: initialData?.id || Date.now().toString(),
+    //   title,
+    //   description,
+    //   start: startDate,
+    //   end: endDate,
+    //   category,
+    //   completed: completed || false,
+    // }
 
     if (initialData?.id) {
       // Update existing event
@@ -103,6 +109,9 @@ export default function EventForm({ initialData }: EventFormProps) {
     // setIsTimeBlockFormOpen(false)
     // setEditingEvent(null)
   }
+
+  const isAlldayEvent = form.watch('allDay')
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -126,24 +135,26 @@ export default function EventForm({ initialData }: EventFormProps) {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Start Date</FormLabel>
-                <DatePicker field={field} />
+                <DatePickerForm field={field} />
                 <FormMessage />
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="startTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isAlldayEvent && (
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
         <div className="flex gap-4">
           <FormField
@@ -152,25 +163,27 @@ export default function EventForm({ initialData }: EventFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>End Date</FormLabel>
-                <DatePicker field={field} />
+                <DatePickerForm field={field} />
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="endTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isAlldayEvent && (
+            <FormField
+              control={form.control}
+              name="endTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
         <FormField
           control={form.control}
@@ -248,7 +261,11 @@ export default function EventForm({ initialData }: EventFormProps) {
           )}
         />
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={() => {}}>
+          <Button
+            variant="outline"
+            type="button"
+            onClick={() => setIsFormOpen(false)}
+          >
             Cancel
           </Button>
           <Button type="submit">Save</Button>
