@@ -19,8 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import type { TimeBlockFormData } from '@/features/calendar/components/forms/time-block-form'
-import TimeBlockForm from '@/features/calendar/components/forms/time-block-form'
+import EventForm from '@/features/calendar/components/forms/event-form'
 import { cn } from '@/lib/utils'
 import { addDays, format, getDay, parse, startOfWeek } from 'date-fns'
 import { enUS } from 'date-fns/locale'
@@ -36,11 +35,11 @@ import {
   Calendar as BigCalendar,
   dateFnsLocalizer,
   Views,
+  type Event,
   type View,
 } from 'react-big-calendar'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
-// Set up date-fns localizer for React Big Calendar
 const locales = {
   'en-US': enUS,
 }
@@ -60,24 +59,110 @@ const CALENDAR_NAVIGATION_DIRECTION = {
 
 type CalendarNavigationDirection =
   (typeof CALENDAR_NAVIGATION_DIRECTION)[keyof typeof CALENDAR_NAVIGATION_DIRECTION]
-// type CalendarView = 'day' | 'week' | 'month'
 
-interface CalendarEvent {
-  id: string
-  title: string
-  start: Date
-  end: Date
-  allDay?: boolean
-  resource?: any
+export interface CalendarEvent extends Event {
+  id?: string
+  title?: string
   category?: string
   completed?: boolean
   description?: string
 }
 
-interface EnergyLevelData {
-  date: string
-  level: number
+function generateSampleEvents(): CalendarEvent[] {
+  const today = new Date()
+
+  // Create copies of today's date to modify without affecting the original
+  const todayEvents = new Date(today)
+  const tomorrowEvents = addDays(new Date(today), 1)
+  const dayAfterEvents = addDays(new Date(today), 2)
+
+  return [
+    {
+      id: '1',
+      title: 'Morning Meditation',
+      start: new Date(new Date(todayEvents).setHours(7, 0, 0, 0)),
+      end: new Date(new Date(todayEvents).setHours(7, 30, 0, 0)),
+      category: 'Mindfulness',
+      completed: true,
+      description: 'Focus on breathing and mindfulness',
+    },
+    {
+      id: '2',
+      title: 'Workout Session',
+      start: new Date(new Date(todayEvents).setHours(8, 30, 0, 0)),
+      end: new Date(new Date(todayEvents).setHours(9, 30, 0, 0)),
+      category: 'Fitness',
+      completed: false,
+      description: 'Strength training day',
+    },
+    {
+      id: '3',
+      title: 'Project Planning',
+      start: new Date(new Date(tomorrowEvents).setHours(10, 0, 0, 0)),
+      end: new Date(new Date(tomorrowEvents).setHours(11, 30, 0, 0)),
+      category: 'Work',
+      completed: false,
+      description: 'Quarterly goals review',
+    },
+    {
+      id: '4',
+      title: 'Team Meeting',
+      start: new Date(new Date(tomorrowEvents).setHours(14, 0, 0, 0)),
+      end: new Date(new Date(tomorrowEvents).setHours(15, 0, 0, 0)),
+      category: 'Work',
+      completed: false,
+      description: 'Weekly sync',
+    },
+    {
+      id: '5',
+      title: 'Evening Run',
+      start: new Date(new Date(dayAfterEvents).setHours(18, 0, 0, 0)),
+      end: new Date(new Date(dayAfterEvents).setHours(19, 0, 0, 0)),
+      category: 'Fitness',
+      completed: false,
+      description: '5k easy pace',
+    },
+    // Add more events scattered throughout the month for better monthly view
+    {
+      id: '6',
+      title: 'Monthly Review',
+      start: new Date(
+        new Date(today.getFullYear(), today.getMonth(), 15, 10, 0)
+      ),
+      end: new Date(new Date(today.getFullYear(), today.getMonth(), 15, 12, 0)),
+      category: 'Work',
+      completed: false,
+      description: 'Monthly team review',
+    },
+    {
+      id: '7',
+      title: 'Yoga Class',
+      start: new Date(
+        new Date(today.getFullYear(), today.getMonth(), 20, 18, 0)
+      ),
+      end: new Date(
+        new Date(today.getFullYear(), today.getMonth(), 20, 19, 30)
+      ),
+      category: 'Mindfulness',
+      completed: false,
+      description: 'Hatha yoga session',
+    },
+    {
+      id: '8',
+      title: 'Product Launch',
+      start: new Date(
+        new Date(today.getFullYear(), today.getMonth(), 25, 9, 0)
+      ),
+      end: new Date(new Date(today.getFullYear(), today.getMonth(), 25, 17, 0)),
+      category: 'Work',
+      allDay: true,
+      completed: false,
+      description: 'New product launch day',
+    },
+  ]
 }
+
+const mockEvents = generateSampleEvents()
 
 export const Route = createFileRoute('/app/calendar/')({
   component: RouteComponent,
@@ -88,10 +173,12 @@ function RouteComponent() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [dateTitle, setDateTitle] = useState('')
   const [showCompleted, setShowCompleted] = useState<boolean>(true)
-  const [events, setEvents] = useState<CalendarEvent[]>(generateSampleEvents())
+  const [events, setEvents] = useState<CalendarEvent[]>(mockEvents)
 
-  const [isTimeBlockFormOpen, setIsTimeBlockFormOpen] = useState<boolean>(false)
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
+  const [isEventFormOpen, setIsEventFormOpen] = useState<boolean>(false)
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | undefined>(
+    undefined
+  )
 
   useEffect(() => {
     if (view === 'day') setDateTitle(format(selectedDate, 'MMMM d, yyyy'))
@@ -115,104 +202,6 @@ function RouteComponent() {
     []
   )
 
-  function generateSampleEvents(): CalendarEvent[] {
-    const today = new Date()
-
-    // Create copies of today's date to modify without affecting the original
-    const todayEvents = new Date(today)
-    const tomorrowEvents = addDays(new Date(today), 1)
-    const dayAfterEvents = addDays(new Date(today), 2)
-
-    return [
-      {
-        id: '1',
-        title: 'Morning Meditation',
-        start: new Date(new Date(todayEvents).setHours(7, 0, 0, 0)),
-        end: new Date(new Date(todayEvents).setHours(7, 30, 0, 0)),
-        category: 'Mindfulness',
-        completed: true,
-        description: 'Focus on breathing and mindfulness',
-      },
-      {
-        id: '2',
-        title: 'Workout Session',
-        start: new Date(new Date(todayEvents).setHours(8, 30, 0, 0)),
-        end: new Date(new Date(todayEvents).setHours(9, 30, 0, 0)),
-        category: 'Fitness',
-        completed: false,
-        description: 'Strength training day',
-      },
-      {
-        id: '3',
-        title: 'Project Planning',
-        start: new Date(new Date(tomorrowEvents).setHours(10, 0, 0, 0)),
-        end: new Date(new Date(tomorrowEvents).setHours(11, 30, 0, 0)),
-        category: 'Work',
-        completed: false,
-        description: 'Quarterly goals review',
-      },
-      {
-        id: '4',
-        title: 'Team Meeting',
-        start: new Date(new Date(tomorrowEvents).setHours(14, 0, 0, 0)),
-        end: new Date(new Date(tomorrowEvents).setHours(15, 0, 0, 0)),
-        category: 'Work',
-        completed: false,
-        description: 'Weekly sync',
-      },
-      {
-        id: '5',
-        title: 'Evening Run',
-        start: new Date(new Date(dayAfterEvents).setHours(18, 0, 0, 0)),
-        end: new Date(new Date(dayAfterEvents).setHours(19, 0, 0, 0)),
-        category: 'Fitness',
-        completed: false,
-        description: '5k easy pace',
-      },
-      // Add more events scattered throughout the month for better monthly view
-      {
-        id: '6',
-        title: 'Monthly Review',
-        start: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 15, 10, 0)
-        ),
-        end: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 15, 12, 0)
-        ),
-        category: 'Work',
-        completed: false,
-        description: 'Monthly team review',
-      },
-      {
-        id: '7',
-        title: 'Yoga Class',
-        start: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 20, 18, 0)
-        ),
-        end: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 20, 19, 30)
-        ),
-        category: 'Mindfulness',
-        completed: false,
-        description: 'Hatha yoga session',
-      },
-      {
-        id: '8',
-        title: 'Product Launch',
-        start: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 25, 9, 0)
-        ),
-        end: new Date(
-          new Date(today.getFullYear(), today.getMonth(), 25, 17, 0)
-        ),
-        category: 'Work',
-        allDay: true,
-        completed: false,
-        description: 'New product launch day',
-      },
-    ]
-  }
-
   const goToToday = () => setSelectedDate(new Date())
 
   function navigateCalendar(direction: CalendarNavigationDirection) {
@@ -227,80 +216,17 @@ function RouteComponent() {
     }
   }
 
-  const handleUpdateEnergyLevel = (date: string, level: number) => {
-    setEnergyLevels(prev => {
-      const existing = prev.findIndex(item => item.date === date)
-      if (existing !== -1) {
-        return prev.map(item =>
-          item.date === date ? { ...item, level } : item
-        )
-      } else {
-        return [...prev, { date, level }]
-      }
-    })
+  function handleSelectEvent(event: CalendarEvent) {
+    setSelectedEvent(event)
+    setIsEventFormOpen(true)
   }
 
-  // Event handlers for the calendar
-  const handleSelectEvent = (event: CalendarEvent) => {
-    setEditingEvent(event)
-    setIsTimeBlockFormOpen(true)
-  }
-
-  const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-    const newEvent: CalendarEvent = {
-      id: '',
-      title: '',
+  function handleSelectSlot({ start, end }: { start: Date; end: Date }) {
+    setSelectedEvent({
       start,
       end,
-      category: 'Work',
-    }
-    setEditingEvent(newEvent)
-    setIsTimeBlockFormOpen(true)
-  }
-
-  // Handle saving time block from the form
-  const handleSaveTimeBlock = (data: TimeBlockFormData) => {
-    const {
-      title,
-      description,
-      date,
-      startTime,
-      endTime,
-      category,
-      completed,
-    } = data
-
-    // Convert date and time strings to Date objects
-    const startDate = new Date(date)
-    const [startHours, startMinutes] = startTime.split(':').map(Number)
-    startDate.setHours(startHours, startMinutes, 0, 0)
-
-    const endDate = new Date(date)
-    const [endHours, endMinutes] = endTime.split(':').map(Number)
-    endDate.setHours(endHours, endMinutes, 0, 0)
-
-    const newEvent: CalendarEvent = {
-      id: editingEvent?.id || Date.now().toString(),
-      title,
-      description,
-      start: startDate,
-      end: endDate,
-      category,
-      completed: completed || false,
-    }
-
-    if (editingEvent?.id) {
-      // Update existing event
-      setEvents(
-        events.map(event => (event.id === editingEvent.id ? newEvent : event))
-      )
-    } else {
-      // Add new event
-      setEvents([...events, newEvent])
-    }
-
-    setIsTimeBlockFormOpen(false)
-    setEditingEvent(null)
+    })
+    setIsEventFormOpen(true)
   }
 
   // Custom event styling
@@ -421,8 +347,8 @@ function RouteComponent() {
 
             <Button
               onClick={() => {
-                setEditingEvent(null)
-                setIsTimeBlockFormOpen(true)
+                setSelectedEvent(undefined)
+                setIsEventFormOpen(true)
               }}
             >
               <PlusCircle className="h-4 w-4 mr-2" />
@@ -441,10 +367,6 @@ function RouteComponent() {
             endAccessor="end"
             defaultView={'week'}
             view={view}
-            // onView={newView => {
-            //   setView(newView)
-            // }}
-            // onNavigate={date => setCurrentDate(date)}
             date={selectedDate}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
@@ -473,30 +395,14 @@ function RouteComponent() {
       </div>
 
       {/* Time Block Form Dialog */}
-      <Dialog open={isTimeBlockFormOpen} onOpenChange={setIsTimeBlockFormOpen}>
+      <Dialog open={isEventFormOpen} onOpenChange={setIsEventFormOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editingEvent?.id ? 'Edit Time Block' : 'Add Time Block'}
+              {selectedEvent?.id ? 'Edit Event' : 'Add New Event'}
             </DialogTitle>
           </DialogHeader>
-          <TimeBlockForm
-            initialData={
-              editingEvent
-                ? {
-                    title: editingEvent.title,
-                    description: editingEvent.description || '',
-                    date: editingEvent.start,
-                    startTime: format(editingEvent.start, 'HH:mm'),
-                    endTime: format(editingEvent.end, 'HH:mm'),
-                    category: editingEvent.category,
-                    completed: editingEvent.completed,
-                  }
-                : undefined
-            }
-            onSubmit={handleSaveTimeBlock}
-            onCancel={() => setIsTimeBlockFormOpen(false)}
-          />
+          <EventForm initialData={selectedEvent} />
         </DialogContent>
       </Dialog>
     </div>
