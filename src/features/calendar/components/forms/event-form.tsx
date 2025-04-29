@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import type { CalendarEvent } from '@/routes/app/calendar'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -173,6 +174,25 @@ export default function EventForm({ initialData }: EventFormProps) {
         </div>
         <FormField
           control={form.control}
+          name="allDay"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="cursor-pointer"
+                />
+              </FormControl>
+              <div className="leading-none">
+                <FormLabel>All Day</FormLabel>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="category"
           render={({ field }) => (
             <FormItem>
@@ -195,6 +215,7 @@ export default function EventForm({ initialData }: EventFormProps) {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="completed"
