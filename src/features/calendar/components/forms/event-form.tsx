@@ -65,7 +65,7 @@ export default function EventForm({
         initialData?.end || new Date(new Date().getTime() + 60 * 60 * 1000),
         'HH:mm'
       ),
-      allDay: false,
+      allDay: initialData?.allDay || false,
       category: initialData?.category || 'Work',
       completed: initialData?.completed || false,
     },
@@ -86,15 +86,16 @@ export default function EventForm({
       : event.endTime.split(':').map(Number)
     updatedEndDate.setHours(endHours, endMinutes, 0, 0)
 
-    // const newEvent: CalendarEvent = {
-    // id: initialData?.id || Date.now().toString(),
-    //   title,
-    //   description,
-    //   start: startDate,
-    //   end: endDate,
-    //   category,
-    //   completed: completed || false,
-    // }
+    const newEvent: CalendarEvent = {
+      id: initialData?.id || Date.now().toString(),
+      title: event.title,
+      description: event.description,
+      start: updatedStartDate,
+      end: updatedEndDate,
+      allDay: event.allDay,
+      category: event.category,
+      completed: event.completed,
+    }
 
     if (initialData?.id) {
       // Update existing event
