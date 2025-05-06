@@ -1,15 +1,11 @@
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DatePickerForm } from '@/components/ui/date-picker-form'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import FieldInfo from '@/components/ui/field-info'
+import FormItem from '@/components/ui/form-item'
 import { Input } from '@/components/ui/input'
+import InputWithLabel from '@/components/ui/input-with-label'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -20,13 +16,12 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import type { CalendarEvent } from '@/routes/app/calendar'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from '@tanstack/react-form'
 import { format } from 'date-fns'
 import type { Dispatch, SetStateAction } from 'react'
-import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-const eventFormSchema = z.object({
+const EventSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }),
   description: z.string().optional(),
   startDate: z.date({
@@ -42,7 +37,7 @@ const eventFormSchema = z.object({
   completed: z.boolean(),
 })
 
-type EventForm = z.infer<typeof eventFormSchema>
+type EventForm = z.infer<typeof EventSchema>
 
 type EventFormProps = {
   initialData?: Partial<CalendarEvent>
@@ -53,48 +48,31 @@ export default function EventForm({
   initialData,
   setIsFormOpen,
 }: EventFormProps) {
-  const form = useForm<EventForm>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      description: initialData?.description || '',
-      startDate: initialData?.start || new Date(),
-      startTime: format(initialData?.start || new Date(), 'HH:mm'),
-      endDate: initialData?.end || new Date(),
-      endTime: format(
-        initialData?.end || new Date(new Date().getTime() + 60 * 60 * 1000),
-        'HH:mm'
-      ),
-      allDay: initialData?.allDay || false,
-      category: initialData?.category || 'Work',
-      completed: initialData?.completed || false,
-    },
-  })
-
-  const handleSubmit = (event: EventForm) => {
+  const handleSubmit = (value: EventForm) => {
+    console.log(value)
     // const { title, description, start, end, category, completed } = event
 
-    const updatedStartDate = new Date(event.startDate)
-    const [startHours, startMinutes] = event.allDay
+    const updatedStartDate = new Date(value.startDate)
+    const [startHours, startMinutes] = value.allDay
       ? [0, 0]
-      : event.startTime.split(':').map(Number)
+      : value.startTime.split(':').map(Number)
     updatedStartDate.setHours(startHours, startMinutes, 0, 0)
 
-    const updatedEndDate = new Date(event.endDate)
-    const [endHours, endMinutes] = event.allDay
+    const updatedEndDate = new Date(value.endDate)
+    const [endHours, endMinutes] = value.allDay
       ? [23, 59]
-      : event.endTime.split(':').map(Number)
+      : value.endTime.split(':').map(Number)
     updatedEndDate.setHours(endHours, endMinutes, 0, 0)
 
     const newEvent: CalendarEvent = {
       id: initialData?.id || Date.now().toString(),
-      title: event.title,
-      description: event.description,
+      title: value.title,
+      description: value.description,
       start: updatedStartDate,
       end: updatedEndDate,
-      allDay: event.allDay,
-      category: event.category,
-      completed: event.completed,
+      allDay: value.allDay,
+      category: value.category,
+      completed: value.completed,
     }
 
     if (initialData?.id) {
@@ -111,112 +89,138 @@ export default function EventForm({
     // setEditingEvent(null)
   }
 
-  const isAlldayEvent = form.watch('allDay')
+  const form = useForm({
+    defaultValues: {
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      startDate: initialData?.start || new Date(),
+      startTime: format(initialData?.start || new Date(), 'HH:mm'),
+      endDate: initialData?.end || new Date(),
+      endTime: format(
+        initialData?.end || new Date(new Date().getTime() + 60 * 60 * 1000),
+        'HH:mm'
+      ),
+      allDay: initialData?.allDay || false,
+      category: initialData?.category || 'Work',
+      completed: false,
+    } as EventForm,
+    validators: { onBlur: EventSchema },
+    onSubmit: ({ value }) => handleSubmit(value),
+  })
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
+    <div>
+      <form
+        onSubmit={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+        className="space-y-4"
+      >
+        <form.Field
           name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter title" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          children={field => <InputWithLabel field={field} label={'Title'} />}
         />
         <div className="flex gap-4">
-          <FormField
-            control={form.control}
+          <form.Field
             name="startDate"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Start Date</FormLabel>
+            children={field => (
+              <FormItem>
+                <Label>Start Date</Label>
                 <DatePickerForm field={field} />
-                <FormMessage />
+                <FieldInfo field={field} />
               </FormItem>
             )}
           />
-          {!isAlldayEvent && (
-            <FormField
-              control={form.control}
-              name="startTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <form.Subscribe
+            selector={state => state.values.allDay}
+            children={allday =>
+              !allday && (
+                <form.Field name="startTime">
+                  {field => (
+                    <FormItem>
+                      <Label>Start Time</Label>
+                      <Input
+                        type="time"
+                        value={field.state.value}
+                        onChange={e => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        aria-invalid={
+                          field.state.meta.errors.length > 0 &&
+                          field.state.meta.isTouched
+                        }
+                      />
+                    </FormItem>
+                  )}
+                </form.Field>
+              )
+            }
+          />
         </div>
         <div className="flex gap-4">
-          <FormField
-            control={form.control}
+          <form.Field
             name="endDate"
-            render={({ field }) => (
+            children={field => (
               <FormItem>
-                <FormLabel>End Date</FormLabel>
+                <Label>End Date</Label>
                 <DatePickerForm field={field} />
-                <FormMessage />
+                <FieldInfo field={field} />
               </FormItem>
             )}
           />
 
-          {!isAlldayEvent && (
-            <FormField
-              control={form.control}
-              name="endTime"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Time</FormLabel>
-                  <FormControl>
-                    <Input type="time" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
+          <form.Subscribe
+            selector={state => state.values.allDay}
+            children={allday =>
+              !allday && (
+                <form.Field name="endTime">
+                  {field => (
+                    <FormItem>
+                      <Label>End Time</Label>
+                      <Input
+                        type="time"
+                        value={field.state.value}
+                        onChange={e => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        aria-invalid={
+                          field.state.meta.errors.length > 0 &&
+                          field.state.meta.isTouched
+                        }
+                      />
+                    </FormItem>
+                  )}
+                </form.Field>
+              )
+            }
+          />
         </div>
-        <FormField
-          control={form.control}
+        <form.Field
           name="allDay"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  className="cursor-pointer"
-                />
-              </FormControl>
-              <div className="leading-none">
-                <FormLabel>All Day</FormLabel>
-              </div>
-              <FormMessage />
-            </FormItem>
+          children={field => (
+            <div className="flex items-start gap-2">
+              <Switch
+                checked={field.state.value}
+                onCheckedChange={field.handleChange}
+                className="cursor-pointer"
+              />
+              <Label className="leading-none">All Day</Label>
+              <FieldInfo field={field} />
+            </div>
           )}
         />
-        <FormField
-          control={form.control}
+        <form.Field
           name="category"
-          render={({ field }) => (
+          children={field => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                </FormControl>
+              <Label>Category</Label>
+              <Select
+                onValueChange={field.handleChange}
+                defaultValue={field.state.value}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Work">Work</SelectItem>
                   <SelectItem value="Personal">Personal</SelectItem>
@@ -225,53 +229,72 @@ export default function EventForm({
                   <SelectItem value="Learning">Learning</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              <FieldInfo field={field} />
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
+        <form.Field
           name="completed"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
-              <FormControl>
+          children={field => (
+            <div>
+              <div className="flex items-start gap-2">
                 <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+                  id={field.name}
+                  checked={field.state.value}
+                  onCheckedChange={checkedState =>
+                    field.handleChange(!!checkedState)
+                  }
                 />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Completed</FormLabel>
+                <Label
+                  htmlFor={field.name}
+                  data-error={!field.state.meta.isValid}
+                  className="leading-none"
+                >
+                  Completed
+                </Label>
               </div>
-              <FormMessage />
-            </FormItem>
+              <FieldInfo field={field} />
+            </div>
           )}
         />
-        <FormField
-          control={form.control}
+        <form.Field
           name="description"
-          render={({ field }) => (
+          children={field => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Add details..." {...field} />
-              </FormControl>
-              <FormMessage />
+              <Label htmlFor={field.name}>Description</Label>
+              <Textarea
+                id={field.name}
+                placeholder="Add details..."
+                value={field.state.value}
+                onChange={e => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+                aria-invalid={
+                  field.state.meta.errors.length > 0 &&
+                  field.state.meta.isTouched
+                }
+              />
+              <FieldInfo field={field} />
             </FormItem>
           )}
         />
-        <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => setIsFormOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit">Save</Button>
-        </div>
+        <form.Subscribe
+          selector={state => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit, isSubmitting]) => (
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setIsFormOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!canSubmit}>
+                {isSubmitting ? '...' : 'Submit'}
+              </Button>
+            </div>
+          )}
+        />
       </form>
-    </Form>
+    </div>
   )
 }

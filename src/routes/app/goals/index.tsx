@@ -35,366 +35,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
-// Define types for our goals
-interface Goal {
-  id: string
-  name: string
-  description: string
-  progress: number
-  target: number
-  deadline: string
-  createdAt: string
-  tags: string[]
-  linkedHabits: string[]
-  linkedTasks: {
-    id: string
-    name: string
-    completed: boolean
-  }[]
-  milestones: {
-    id: string
-    name: string
-    completed: boolean
-  }[]
-  completed: boolean
-}
-
-// Schema for new goal form
-const goalFormSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Goal name must be at least 2 characters.',
-  }),
-  description: z.string().optional(),
-  deadline: z.string(),
-  tags: z.string().optional(),
-})
-
-export const Route = createFileRoute('/app/goals/')({
-  component: RouteComponent,
-})
-
-function RouteComponent() {
-  const [goals, setGoals] = useState<Goal[]>(mockGoals)
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const [isNewGoalOpen, setIsNewGoalOpen] = useState(false)
-  const [filterStatus, setFilterStatus] = useState<
-    'all' | 'active' | 'completed'
-  >('all')
-  const [sortBy, setSortBy] = useState<'name' | 'progress' | 'deadline'>(
-    'deadline'
-  )
-  const [filterTag, setFilterTag] = useState<string | null>(null)
-
-  // Form for creating a new goal
-  const form = useForm<z.infer<typeof goalFormSchema>>({
-    resolver: zodResolver(goalFormSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0], // 30 days from now
-      tags: '',
-    },
-  })
-
-  // Handle opening goal details
-  const handleGoalClick = (goal: Goal) => {
-    setSelectedGoal(goal)
-    setIsDetailOpen(true)
-  }
-
-  // Handle creating a new goal
-  const onSubmit = (values: z.infer<typeof goalFormSchema>) => {
-    const newGoal: Goal = {
-      id: `goal-${Date.now()}`,
-      name: values.name,
-      description: values.description || '',
-      progress: 0,
-      target: 100,
-      deadline: values.deadline,
-      createdAt: new Date().toISOString(),
-      tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
-      linkedHabits: [],
-      linkedTasks: [],
-      milestones: [],
-      completed: false,
-    }
-
-    setGoals([newGoal, ...goals])
-    setIsNewGoalOpen(false)
-    form.reset()
-  }
-
-  // Filter and sort goals
-  const filteredGoals = goals
-    .filter(goal => {
-      if (filterStatus === 'active') return !goal.completed
-      if (filterStatus === 'completed') return goal.completed
-      return true
-    })
-    .filter(goal => {
-      if (!filterTag) return true
-      return goal.tags.includes(filterTag)
-    })
-    .sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name)
-      if (sortBy === 'progress') return b.progress - a.progress
-      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-    })
-
-  // Handle marking a goal as complete
-  const handleMarkComplete = (goalId: string) => {
-    setGoals(
-      goals.map(goal =>
-        goal.id === goalId ? { ...goal, completed: !goal.completed } : goal
-      )
-    )
-  }
-
-  // Handle deleting a goal
-  const handleDeleteGoal = (goalId: string) => {
-    if (window.confirm('Are you sure you want to delete this goal?')) {
-      setGoals(goals.filter(goal => goal.id !== goalId))
-      if (selectedGoal?.id === goalId) {
-        setIsDetailOpen(false)
-      }
-    }
-  }
-
-  // Get all unique tags
-  const allTags = Array.from(new Set(goals.flatMap(goal => goal.tags)))
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Your Goals</h1>
-          <Button onClick={() => setIsNewGoalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New Goal
-          </Button>
-        </div>
-
-        {/* Progress Snapshot */}
-        <GoalProgressSnapshot
-          totalGoals={goals.length}
-          activeGoals={goals.filter(g => !g.completed).length}
-          completedThisMonth={
-            goals.filter(
-              g =>
-                g.completed &&
-                new Date(g.deadline).getMonth() === new Date().getMonth()
-            ).length
-          }
-          averageProgress={
-            goals.filter(g => !g.completed).length > 0
-              ? goals
-                  .filter(g => !g.completed)
-                  .reduce((acc, g) => acc + g.progress, 0) /
-                goals.filter(g => !g.completed).length
-              : 0
-          }
-        />
-
-        {/* Filters and Sorting */}
-        <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-          <div className="flex flex-wrap gap-2">
-            <Tabs
-              defaultValue="all"
-              className="w-auto"
-              onValueChange={v => setFilterStatus(v as any)}
-            >
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="active">Active</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-9">
-                  <Tag className="mr-2 h-4 w-4" />
-                  {filterTag || 'All Tags'}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilterTag(null)}>
-                  All Tags
-                </DropdownMenuItem>
-                {allTags.map(tag => (
-                  <DropdownMenuItem key={tag} onClick={() => setFilterTag(tag)}>
-                    {tag}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ArrowUpDown className="mr-2 h-4 w-4" />
-                Sort: {sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setSortBy('name')}>
-                Name
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('progress')}>
-                Progress
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy('deadline')}>
-                Deadline
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Goals Grid View */}
-        {filteredGoals.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGoals.map(goal => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onClick={() => handleGoalClick(goal)}
-                onMarkComplete={() => handleMarkComplete(goal.id)}
-                onDelete={() => handleDeleteGoal(goal.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <Target className="mx-auto h-12 w-12 text-gray-400" />
-            <h2 className="mt-4 text-xl font-medium text-gray-900 dark:text-gray-100">
-              No goals found
-            </h2>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              {goals.length === 0
-                ? 'Set clear targets and track your progress over time.'
-                : 'No goals match your current filters.'}
-            </p>
-            {goals.length === 0 && (
-              <Button onClick={() => setIsNewGoalOpen(true)} className="mt-4">
-                Create your first goal
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Goal Detail Panel */}
-        {selectedGoal && (
-          <GoalDetailPanel
-            goal={selectedGoal}
-            isOpen={isDetailOpen}
-            onClose={() => setIsDetailOpen(false)}
-            onMarkComplete={() => handleMarkComplete(selectedGoal.id)}
-            onDelete={() => handleDeleteGoal(selectedGoal.id)}
-          />
-        )}
-
-        {/* New Goal Dialog */}
-        <Dialog open={isNewGoalOpen} onOpenChange={setIsNewGoalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Goal</DialogTitle>
-              <DialogDescription>
-                Set a meaningful goal with a clear deadline. You can link habits
-                and tasks later.
-              </DialogDescription>
-            </DialogHeader>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Goal Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Run a Marathon" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description (Optional)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe your goal and why it matters to you"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="deadline"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Deadline</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        When do you want to achieve this goal?
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="health, career, learning (separate with commas)"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Tags help you categorize and filter your goals
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DialogFooter>
-                  <Button type="submit">Create Goal</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </main>
-    </div>
-  )
-}
-
 const mockGoals: Goal[] = [
   {
     id: 'goal-1',
@@ -519,3 +159,358 @@ const mockGoals: Goal[] = [
     completed: true,
   },
 ]
+
+type Goal = {
+  id: string
+  name: string
+  description: string
+  progress: number
+  target: number
+  deadline: string
+  createdAt: string
+  tags: string[]
+  linkedHabits: string[]
+  linkedTasks: {
+    id: string
+    name: string
+    completed: boolean
+  }[]
+  milestones: {
+    id: string
+    name: string
+    completed: boolean
+  }[]
+  completed: boolean
+}
+
+const goalFormSchema = z.object({
+  name: z.string().min(2, {
+    message: 'Goal name must be at least 2 characters.',
+  }),
+  description: z.string().optional(),
+  deadline: z.string(),
+  tags: z.string().optional(),
+})
+
+export const Route = createFileRoute('/app/goals/')({
+  component: RouteComponent,
+})
+
+function RouteComponent() {
+  const [goals, setGoals] = useState<Goal[]>(mockGoals)
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isNewGoalOpen, setIsNewGoalOpen] = useState(false)
+  const [filterStatus, setFilterStatus] = useState<
+    'all' | 'active' | 'completed'
+  >('all')
+  const [sortBy, setSortBy] = useState<'name' | 'progress' | 'deadline'>(
+    'deadline'
+  )
+  const [filterTag, setFilterTag] = useState<string | null>(null)
+
+  const form = useForm<z.infer<typeof goalFormSchema>>({
+    resolver: zodResolver(goalFormSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0], // 30 days from now
+      tags: '',
+    },
+  })
+
+  // Handle opening goal details
+  const handleGoalClick = (goal: Goal) => {
+    setSelectedGoal(goal)
+    setIsDetailOpen(true)
+  }
+
+  // Handle creating a new goal
+  const onSubmit = (values: z.infer<typeof goalFormSchema>) => {
+    const newGoal: Goal = {
+      id: `goal-${Date.now()}`,
+      name: values.name,
+      description: values.description || '',
+      progress: 0,
+      target: 100,
+      deadline: values.deadline,
+      createdAt: new Date().toISOString(),
+      tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
+      linkedHabits: [],
+      linkedTasks: [],
+      milestones: [],
+      completed: false,
+    }
+
+    setGoals([newGoal, ...goals])
+    setIsNewGoalOpen(false)
+    form.reset()
+  }
+
+  const filteredGoals = goals
+    .filter(goal => {
+      if (filterStatus === 'active') return !goal.completed
+      if (filterStatus === 'completed') return goal.completed
+      return true
+    })
+    .filter(goal => {
+      if (!filterTag) return true
+      return goal.tags.includes(filterTag)
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name)
+      if (sortBy === 'progress') return b.progress - a.progress
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+    })
+
+  // Handle marking a goal as complete
+  const handleMarkComplete = (goalId: string) => {
+    setGoals(
+      goals.map(goal =>
+        goal.id === goalId ? { ...goal, completed: !goal.completed } : goal
+      )
+    )
+  }
+
+  // Handle deleting a goal
+  const handleDeleteGoal = (goalId: string) => {
+    if (window.confirm('Are you sure you want to delete this goal?')) {
+      setGoals(goals.filter(goal => goal.id !== goalId))
+      if (selectedGoal?.id === goalId) {
+        setIsDetailOpen(false)
+      }
+    }
+  }
+
+  // Get all unique tags
+  const allTags = Array.from(new Set(goals.flatMap(goal => goal.tags)))
+
+  return (
+    <div className="flex-1 bg-gray-50 dark:bg-gray-900">
+      <div className="container py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Your Goals</h1>
+          <Button onClick={() => setIsNewGoalOpen(true)}>
+            <Plus /> New Goal
+          </Button>
+        </div>
+
+        {/* Progress Snapshot */}
+        <GoalProgressSnapshot
+          totalGoals={goals.length}
+          activeGoals={goals.filter(g => !g.completed).length}
+          completedThisMonth={
+            goals.filter(
+              g =>
+                g.completed &&
+                new Date(g.deadline).getMonth() === new Date().getMonth()
+            ).length
+          }
+          averageProgress={
+            goals.filter(g => !g.completed).length > 0
+              ? goals
+                  .filter(g => !g.completed)
+                  .reduce((acc, g) => acc + g.progress, 0) /
+                goals.filter(g => !g.completed).length
+              : 0
+          }
+        />
+
+        {/* Filters and Sorting */}
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+          <div className="flex flex-wrap gap-2">
+            <Tabs
+              defaultValue="all"
+              onValueChange={v => setFilterStatus(v as any)}
+            >
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9">
+                  <Tag />
+                  {filterTag || 'All Tags'}
+                  <ChevronDown />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilterTag(null)}>
+                  All Tags
+                </DropdownMenuItem>
+                {allTags.map(tag => (
+                  <DropdownMenuItem key={tag} onClick={() => setFilterTag(tag)}>
+                    {tag}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <ArrowUpDown />
+                Sort: {sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
+                <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setSortBy('name')}>
+                Name
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('progress')}>
+                Progress
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('deadline')}>
+                Deadline
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Goals Grid View */}
+        {filteredGoals.length > 0 ? (
+          <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredGoals.map(goal => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                onClick={() => handleGoalClick(goal)}
+                onMarkComplete={() => handleMarkComplete(goal.id)}
+                onDelete={() => handleDeleteGoal(goal.id)}
+              />
+            ))}
+          </section>
+        ) : (
+          <section className="text-center py-16 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <Target className="mx-auto h-12 w-12 text-gray-400" />
+            <h2 className="mt-4 text-xl font-medium text-gray-900 dark:text-gray-100">
+              No goals found
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {goals.length === 0
+                ? 'Set clear targets and track your progress over time.'
+                : 'No goals match your current filters.'}
+            </p>
+            {goals.length === 0 && (
+              <Button onClick={() => setIsNewGoalOpen(true)} className="mt-4">
+                Create your first goal
+              </Button>
+            )}
+          </section>
+        )}
+
+        {/* Goal Detail Panel */}
+        {selectedGoal && (
+          <GoalDetailPanel
+            goal={selectedGoal}
+            isOpen={isDetailOpen}
+            onClose={() => setIsDetailOpen(false)}
+            onMarkComplete={() => handleMarkComplete(selectedGoal.id)}
+            onDelete={() => handleDeleteGoal(selectedGoal.id)}
+          />
+        )}
+
+        {/* New Goal Dialog */}
+        <Dialog open={isNewGoalOpen} onOpenChange={setIsNewGoalOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create New Goal</DialogTitle>
+              <DialogDescription>
+                Set a meaningful goal with a clear deadline. You can link habits
+                and tasks later.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Goal Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Run a Marathon" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe your goal and why it matters to you"
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="deadline"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deadline</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        When do you want to achieve this goal?
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="health, career, learning (separate with commas)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Tags help you categorize and filter your goals
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="submit">Create Goal</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}

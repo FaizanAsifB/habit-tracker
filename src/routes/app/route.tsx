@@ -10,9 +10,9 @@ export const Route = createFileRoute('/app')({
 function RouteComponent() {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-4">
+        <main className="min-h-screen flex flex-col flex-1">
           <div className="mb-4">
             <SidebarTrigger />
           </div>
